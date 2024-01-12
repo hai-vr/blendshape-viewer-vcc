@@ -15,6 +15,9 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
         public bool showHotspots;
         public bool useComputeShader = true;
         public Texture2D[] tex2ds = new Texture2D[0];
+
+        private string _search;
+        
         private Vector2 _scrollPos;
         private SkinnedMeshRenderer _generatedFor;
         private int _generatedSize;
@@ -27,6 +30,8 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
         private float _generatedFarClipPlane;
         private float _generatedOrthographicSize;
         private Rect m_area;
+        
+        private const string SearchLabel = "Search";
 
         public BlendshapeViewerEditorWindow()
         {
@@ -62,28 +67,50 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.IntSlider(serializedObject.FindProperty(nameof(thumbnailSize)), 100, 300);
 
+            
+            EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(skinnedMesh == null || AnimationMode.InAnimationMode());
             if (GUILayout.Button("Update"))
             {
                 TryExecuteUpdate();
             }
             EditorGUI.EndDisabledGroup();
+            EditorGUILayout.LabelField("", GUILayout.Width(25));
+            EditorGUILayout.LabelField(SearchLabel, GUILayout.Width(50));
+            _search = EditorGUILayout.TextField(_search, GUILayout.Width(200));
+            EditorGUILayout.EndHorizontal();
+            
             serializedObject.ApplyModifiedProperties();
 
             var width = Mathf.Max(_generatedSize, MinWidth);
-            var total = tex2ds.Length;
+            var total = skinnedMesh.sharedMesh.blendShapeCount;
             if (skinnedMesh != null && total > 0 && _generatedFor == skinnedMesh)
             {
                 var serializedSkinnedMesh = new SerializedObject(skinnedMesh);
 
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GUILayout.Height(position.height - EditorGUIUtility.singleLineHeight * 7));
+                
+                var hasSearch = !string.IsNullOrEmpty(_search);
 
                 var mod = Mathf.Max(1, (int)position.width / (width + 15));
                 var highlightColor = EditorGUIUtility.isProSkin ? new Color(0.92f, 0.62f, 0.25f) : new Color(0.74f, 0.47f, 0.1f);
+                var shown = 0;
+                var clipboard = EditorGUIUtility.IconContent("Clipboard").image;
                 for (var index = 0; index < total; index++)
                 {
-                    var texture2D = tex2ds[index];
-                    if (index % mod == 0)
+                    var blendShapeName = skinnedMesh.sharedMesh.GetBlendShapeName(index);
+                    if (hasSearch && !IsMatch(blendShapeName))
+                    {
+                        if (index == total - 1)
+                        {
+                            GUILayout.FlexibleSpace();
+                            EditorGUILayout.EndHorizontal();
+                        }
+                        continue;
+                    }
+                    
+                    var texture2D = index < tex2ds.Length ? tex2ds[index] : null;
+                    if (shown % mod == 0)
                     {
                         EditorGUILayout.BeginHorizontal();
                         GUILayout.FlexibleSpace();
@@ -91,21 +118,28 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
 
                     EditorGUILayout.BeginVertical();
                     GUILayout.Box(texture2D);
-                    var blendShapeName = skinnedMesh.sharedMesh.GetBlendShapeName(index);
                     var weight = serializedSkinnedMesh.FindProperty("m_BlendShapeWeights").GetArrayElementAtIndex(index);
                     var isNonZero = weight.floatValue > 0f;
+                    EditorGUILayout.BeginHorizontal();
                     Colored(isNonZero, highlightColor, () =>
                     {
-                        EditorGUILayout.TextField(blendShapeName, isNonZero ? EditorStyles.boldLabel : EditorStyles.label, GUILayout.Width(width));
+                        EditorGUILayout.TextField(blendShapeName, isNonZero ? EditorStyles.boldLabel : EditorStyles.label, GUILayout.Width(width - 25));
                     });
+                    if (GUILayout.Button(new GUIContent(clipboard, $"Copy {blendShapeName} to Clipboard"), GUILayout.Width(25)))
+                    {
+                        GUIUtility.systemCopyBuffer = blendShapeName;
+                    }
+                    EditorGUILayout.EndHorizontal();
                     EditorGUILayout.Slider(weight, 0f, 100f, GUIContent.none, GUILayout.Width(width));
                     EditorGUILayout.EndVertical();
 
-                    if ((index + 1) % mod == 0 || index == total - 1)
+                    if ((shown + 1) % mod == 0 || index == total - 1)
                     {
                         GUILayout.FlexibleSpace();
                         EditorGUILayout.EndHorizontal();
                     }
+
+                    shown++;
                 }
 
                 GUILayout.EndScrollView();
@@ -273,6 +307,12 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
             var newTexture = new Texture2D(Mathf.Max(thumbnailSize, MinWidth), thumbnailSize, TextureFormat.RGB24, false);
             newTexture.wrapMode = TextureWrapMode.Clamp;
             return newTexture;
+        }
+        
+        private bool IsMatch(string thatName)
+        {
+            var propertyName = thatName.ToLowerInvariant();
+            return _search.ToLowerInvariant().Split(' ').All(needle => propertyName.Contains(needle));
         }
 
         [MenuItem("Window/Haï/BlendshapeViewer")]
