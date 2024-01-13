@@ -83,9 +83,9 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
             serializedObject.ApplyModifiedProperties();
 
             var width = Mathf.Max(_generatedSize, MinWidth);
-            var total = skinnedMesh.sharedMesh.blendShapeCount;
-            if (skinnedMesh != null && total > 0 && _generatedFor == skinnedMesh)
+            if (skinnedMesh != null && skinnedMesh.sharedMesh != null && skinnedMesh.sharedMesh.blendShapeCount > 0 && _generatedFor == skinnedMesh)
             {
+                var total = skinnedMesh.sharedMesh.blendShapeCount;
                 var serializedSkinnedMesh = new SerializedObject(skinnedMesh);
 
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GUILayout.Height(position.height - EditorGUIUtility.singleLineHeight * 7));
