@@ -8,6 +8,8 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
     public class BlendshapeViewerEditorWindow : EditorWindow
     {
         private const int MinWidth = 150;
+        private const int MaxSearchQueryLength = 100;
+        
         public SkinnedMeshRenderer skinnedMesh;
         public bool showDifferences = true;
         public bool autoUpdateOnFocus = true;
@@ -16,7 +18,7 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
         public bool useComputeShader = true;
         public Texture2D[] tex2ds = new Texture2D[0];
 
-        private string _search;
+        private string _search = "";
         
         private Vector2 _scrollPos;
         private SkinnedMeshRenderer _generatedFor;
@@ -78,6 +80,11 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
             EditorGUILayout.LabelField("", GUILayout.Width(25));
             EditorGUILayout.LabelField(SearchLabel, GUILayout.Width(50));
             _search = EditorGUILayout.TextField(_search, GUILayout.Width(200));
+            if (_search.Length > MaxSearchQueryLength)
+            {
+                // Try to prevent the editor from hanging up if the user mistakenly pastes a page long of unrelated content (it happened)
+                _search = _search.Substring(0, MaxSearchQueryLength);
+            }
             EditorGUILayout.EndHorizontal();
             
             serializedObject.ApplyModifiedProperties();
