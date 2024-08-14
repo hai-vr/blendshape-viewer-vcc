@@ -14,5 +14,8 @@
   "legacyFolders" : {
     "Assets\\Hai\\BlendshapeViewer" : "c250276ee4eb4ca1a97370171310afe0"
   },
-  "url" : "https://docs.hai-vr.dev/docs/products/blendshape-viewer"
+  "url" : "https://docs.hai-vr.dev/docs/products/blendshape-viewer",
+  "documentationUrl": "https://docs.hai-vr.dev/docs/products/blendshape-viewer",
+  "changelogUrl": "https://docs.hai-vr.dev/docs/changelogs/blendshape-viewer",
+  "license": "MIT"
 }
