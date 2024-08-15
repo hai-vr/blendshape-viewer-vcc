@@ -103,12 +103,13 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
                 var highlightColor = EditorGUIUtility.isProSkin ? new Color(0.92f, 0.62f, 0.25f) : new Color(0.74f, 0.47f, 0.1f);
                 var shown = 0;
                 var clipboard = EditorGUIUtility.IconContent("Clipboard").image;
+                var createdSpaceFirst = false;
                 for (var index = 0; index < total; index++)
                 {
                     var blendShapeName = skinnedMesh.sharedMesh.GetBlendShapeName(index);
                     if (hasSearch && !IsMatch(blendShapeName))
                     {
-                        if (index == total - 1)
+                        if (index == total - 1 && createdSpaceFirst)
                         {
                             GUILayout.FlexibleSpace();
                             EditorGUILayout.EndHorizontal();
@@ -121,6 +122,7 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
                     {
                         EditorGUILayout.BeginHorizontal();
                         GUILayout.FlexibleSpace();
+                        createdSpaceFirst = true;
                     }
 
                     EditorGUILayout.BeginVertical();
@@ -140,10 +142,11 @@ namespace Hai.BlendshapeViewer.Scripts.Editor
                     EditorGUILayout.Slider(weight, 0f, 100f, GUIContent.none, GUILayout.Width(width));
                     EditorGUILayout.EndVertical();
 
-                    if ((shown + 1) % mod == 0 || index == total - 1)
+                    if (((shown + 1) % mod == 0 || index == total - 1) && createdSpaceFirst)
                     {
                         GUILayout.FlexibleSpace();
                         EditorGUILayout.EndHorizontal();
+                        createdSpaceFirst = false;
                     }
 
                     shown++;
